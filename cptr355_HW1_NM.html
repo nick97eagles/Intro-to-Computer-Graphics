@@ -1,0 +1,124 @@
+<!-- 
+  Code was taken from https://jsfiddle.net/jgfoster/9r41oeuc/ and 
+  then reformated to fit assignment specifics.  
+  -->
+<!DOCTYPE html>
+<html lang="en" style="text-align: center; margin-top: 20px;">
+  <script>  
+   "use strict"; // gives improved error-checking in scripts.
+
+  var canvas; // The canvas element on which we will draw.
+  var graphics; // A 2D graphics context for drawing on the canva
+
+   /**
+    * The init() funciton is called after the page has been
+    * loaded.  It initializes the canvas and graphics variables,
+    * and it calls draw() to draw on the canvas.  If an error
+    * occurs, a message is displayed in place of the canvas.
+    */
+   function init() {
+     try {
+       canvas = document.getElementById("canvas");
+       graphics = canvas.getContext("2d");
+     } catch (e) {
+       document.getElementById("canvasholder").innerHTML =
+         "<p>Canvas graphics is not supported.<br>" +
+         "An error occurred while initializing graphics.</p>";
+     }
+     
+     reset();
+   }
+
+   function reset() {
+    	graphics.setTransform(1, 0, 0, 1, 0, 0);
+    	graphics.clearRect(0, 0, 600, 600);
+      drawAxis();
+      graphics.setTransform(1, 0, 0, -1, 300, 300);
+      draw();
+    }
+     /**
+      *  The draw() function is called by init() after the page loads,
+      *  to draw the content of the canvas.
+      */
+     function draw() {
+      graphics.save();
+      // graphics.translate(75,100);
+      // graphics.rotate(Math.PI / 2);
+      let house = drawHouse();
+      graphics.restore();
+      
+    }
+
+    function drawHouse() {
+      // square base
+    	graphics.fillStyle = "red";
+      graphics.translate(-45,-100);
+      graphics.rotate(45*Math.PI/180);
+      graphics.fillRect(-25, -25, 50, 50);
+      // blue roof
+      graphics.fillStyle = "blue";
+      graphics.rotate(90*Math.PI/180);
+      graphics.beginPath();
+      graphics.moveTo(-25, 25);
+      graphics.lineTo( 25, 25);
+      graphics.lineTo(  0, 50);
+      graphics.lineTo(-25, 25);
+      graphics.fill();
+      // yellow door
+      graphics.fillStyle = "yellow";
+      graphics.fillRect(5, -24, 15, 24);
+    }
+
+    function drawAxis() {
+      // draw x axis
+      graphics.beginPath();
+      graphics.moveTo(20, 255);
+      graphics.lineTo(475, 255);
+      graphics.stroke();
+
+      // draw y axis 
+      graphics.beginPath();
+      graphics.moveTo(255, 20);
+      graphics.lineTo(255, 475);
+      graphics.stroke();
+
+      // draw tick marks
+      for (let i = -200; i < 300; i = i + 50) {
+        // verticle line
+        graphics.beginPath();
+        graphics.moveTo(i + 255, 250);
+        graphics.lineTo(i + 255, 260);
+        graphics.stroke();
+        // horizontal line
+        graphics.beginPath();
+        graphics.moveTo(250, i + 255);
+        graphics.lineTo(260, i + 255);
+        graphics.stroke();
+      }
+
+			// add labels
+      graphics.font = "16px serif";
+      graphics.fillText("x", 480, 258);
+      graphics.fillText("y", 250,  15);
+      for (let i = -200; i < 300; i = i + 100) {
+      	if (i != 0) {
+          graphics.fillText( i, i + (i < 0 ? 235 : 240), 240);
+          graphics.fillText(-i, 270, i + 260);
+        }
+      }
+    }
+  </script>
+  <head>
+    <link rel="stylesheet" href="Hw1.css"> 
+  </head> 
+  <body onload="init()">
+    <h1>Nick Morin</h1>
+    <h2>Cptr355 HW1</h2>
+    <div id="canvasholder">
+      <canvas id="canvas" style="border: 3px black solid; border-radius: 20px" width="500" height="500">
+        Canvas not supported
+      </canvas>
+    </div>
+    <br>
+  </body>
+</html>
