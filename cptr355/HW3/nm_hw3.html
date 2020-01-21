@@ -1,5 +1,240 @@
+<!-- 
+    Code foundation taken from cube example
+    Worked with Jason Riggs and Professor Foster
+ -->
 <!DOCTYPE html>
 <html>
-  <head></head>
-  <body></body>
+<head>
+<meta charset="UTF-8">
+<title>Pyramids</title>
+
+<script src="glsim.js"></script>
+
+<script>
+
+    var rotateX = 15;   // rotations of cube about the axes
+    var rotateY = -15;
+    var rotateZ = 0;
+    var offset = 0;
+    var flag = 1; 
+    
+    // ------------------- functions for drawing the pyramids -------------------
+    
+    function square(r, g, b) {
+        glColor3f(r,g,b);
+        glBegin(GL_TRIANGLE_FAN);
+        glVertex3f(-0.5, -0.5, 0.5);
+        glVertex3f(0.5, -0.5, 0.5);
+        glVertex3f(0.5, 0.5, 0.5);
+        glVertex3f(-0.5, 0.5, 0.5);
+        glEnd();
+    }
+
+    function triangle(r, g, b) {
+        glColor3f(r,g,b);
+        glBegin(GL_TRIANGLES);
+        glVertex3f(-0.5, -0.5, 0.5);
+        glVertex3f(0.5, -0.5, 0.5);
+        glVertex3f(0, 0.25, 0);
+        glEnd();
+
+        glColor3f(0,0,0);
+        glBegin(GL_LINE_LOOP);
+        glVertex3f(-0.5, -0.5, 0.5);
+        glVertex3f(0.5, -0.5, 0.5);
+        glVertex3f(0, 0.25, 0);
+        glEnd();
+    }
+    
+    function pyramid(size) {
+    
+        glPushMatrix();
+        glScalef(size,size,size);
+        
+        triangle(1, 1, 0);
+        
+        glPushMatrix();
+        glRotatef(90, 0, 1, 0);
+        triangle(0.7, 0.7, 0);
+        glPopMatrix();
+        
+        glPushMatrix();
+        glRotatef(180, 0, 1, 0);
+        triangle(0.5, 0.5, 0);
+        glPopMatrix();
+        
+        glPushMatrix();
+        glRotatef(-90, 0, 1, 0);
+        triangle(0.3, 0.3, 0);
+        glPopMatrix();
+        
+        // colors base of pyramids 
+        if (size === 0.4) {
+            glPushMatrix();
+            glRotatef(90, 1, 0, 0);
+            square(1, 0, 0);
+            glPopMatrix();
+        }
+        else if (size === 0.5) {
+            glPushMatrix();
+            glRotatef(90, 1, 0, 0);
+            square(0, 1, 0);
+            glPopMatrix();
+        }
+        else {
+            glPushMatrix();
+            glRotatef(90, 1, 0, 0);
+            square(0, 0, 1);
+            glPopMatrix();
+        }
+        
+        
+        glPopMatrix(); // Restore matrix to its state before cube() was called.
+    
+    }
+    
+    // ----------------------------------------------------------------------
+
+    function display() {  // Draws the image.
+
+        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                
+        glLoadIdentity();
+        glTranslatef(0,0,-3);
+        glRotatef(rotateZ,0,0,1);
+        glRotatef(rotateY,0,1,0);
+        glRotatef(rotateX,1,0,0);
+        
+        glPushMatrix();
+        glTranslatef(0, 0.06, 0);
+        pyramid(0.5);
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(0, 0, -0.5 - offset);
+        pyramid(0.3);
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(0, -0.02, 0.5 + offset);
+        pyramid(0.4);
+        glPopMatrix();
+        
+    }
+    
+    function initGL() {
+        if (flag == 1) {
+            // orthographic projection
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(-1, 1, -1, 1, 1, 9);
+            glMatrixMode(GL_MODELVIEW);
+            glEnable(GL_DEPTH_TEST);
+            glClearColor(0, 0, 0, 1);
+            document.getElementById("view").innerHTML = "Orthographic projection"
+        }
+        
+        else if (flag == 0) {
+            // perspective projection
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glFrustum(-1, 1, -1, 1, 1, 9);
+            glMatrixMode(GL_MODELVIEW);
+            glEnable(GL_DEPTH_TEST);
+            glClearColor(0, 0, 0, 1);
+            document.getElementById("view").innerHTML = "perspective projection"
+        }
+    }
+    
+    function doKeyDown(evt) {
+        var key = evt.keyCode;
+        if ( key == 37 ) // left
+           rotateY -= 15;
+        else if ( key == 39 ) // right
+           rotateY += 15;
+        else if ( key == 40) // down
+           rotateX += 15;
+        else if ( key == 38 ) // up
+           rotateX -= 15;
+        else if ( key == 33 ) // page up
+           rotateZ += 15;
+        else if ( key == 34 ) // page down
+           rotateZ -= 15;
+        else if ( key == 36 )  // home
+           rotateX = rotateY = rotateZ = 0;
+        else if ( key === 13 ) // refresh page
+            location.reload();
+        // setting the offset
+        else if ( key == 49)
+            offset = 1/10;
+        else if ( key == 50)
+            offset = 2/10
+        else if ( key == 51)
+            offset = 3/10
+        else if ( key == 52)
+            offset = 4/10
+        else if ( key == 53)
+            offset = 5/10
+        else if ( key == 54)
+            offset = 6/10
+        else if ( key == 55)
+            offset = 7/10
+        else if ( key == 56)
+            offset = 8/10
+        else if ( key == 57)
+            offset = 9/10
+        if (key >=34 && key <= 40) {
+            evt.preventDefault();
+        }
+        // switch between views
+        if (key == 27) {
+            if (flag == 1)
+                flag = 0;
+            else 
+                flag = 1;
+            initGL();
+        }   
+        display();
+    }
+    
+    function init() {  // Called by <body onload="init()">, when the page has loaded.
+        try {
+            glsimUse("glcanvas"); // OpenGL will draw to the canvas with id="glcanvas".
+        }
+        catch (e) {
+            document.getElementById("canvas-holder").innerHTML =
+                "Sorry, an error occured:<br>" + e;
+            return;
+        }
+        document.onkeydown = doKeyDown;
+        initGL();
+        display();
+    }
+
+</script>
+
+</head>
+
+<body onload="init()" style="text-align: center;">
+
+<h1>Nick Morin - HW3</h1>
+<div style="display: inline-block; text-align: left;">
+    <ul>
+        <li>Rotate using arrow keys</li>
+        <li>Press enter to reset</li>
+        <li>Select a number to change offset of pyramids</li>
+        <li>Press esc to change projection view</li>
+    </ul>
+</div>
+<p id="view"></p>
+
+<noscript>
+<p><b>Sorry, this page requires JavaScript!</b></p>
+</noscript>
+
+<div id="canvas-holder">
+<canvas id="glcanvas" width="500" height="500"></canvas>
+</div>
+
+</body>
 </html>
