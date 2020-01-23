@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Snowman</title>
+  <script src="glsim.js"></script>
+  <script>
+
+    var smooth = true;
+    var rotateX = 0;
+    var rotateY = 0;
+    var rotateZ = 0;
+
+    function square(r, g, b) {
+      // draw square
+      glColor3f(r,g,b);
+      glBegin(GL_TRIANGLE_FAN);
+      glVertex3f(-0.5, -0.5, 0.5);
+      glVertex3f(0.5, -0.5, 0.5);
+      glVertex3f(0.5, 0.5, 0.5);
+      glVertex3f(-0.5, 0.5, 0.5);
+      glEnd();
+
+      // draw edges
+      glColor3f(1,1,1);
+      glBegin(GL_LINE_LOOP);
+      glVertex3f(-0.5, -0.5, 0.5);
+      glVertex3f(0.5, -0.5, 0.5);
+      glVertex3f(0.5, 0.5, 0.5);
+      glVertex3f(-0.5, 0.5, 0.5);
+      glEnd();
+    }
+
+
+    function smoothShpere(radius, slices, stacks) {
+        var i,j;
+        for (j = 0; j < stacks; j++) {
+            var latitude1 = (Math.PI/stacks) * j - Math.PI/2;
+            var latitude2 = (Math.PI/stacks) * (j+1) - Math.PI/2;
+            var sinLat1 = Math.sin(latitude1);
+            var cosLat1 = Math.cos(latitude1);
+            var sinLat2 = Math.sin(latitude2);
+            var cosLat2 = Math.cos(latitude2);
+            glBegin(GL_QUAD_STRIP);
+            for (i = 0; i <= slices; i++) {
+                var longitude = (2*Math.PI/slices) * i;
+                var sinLong = Math.sin(longitude);
+                var cosLong = Math.cos(longitude);
+                var x1 = cosLong * cosLat1;
+                var y1 = sinLong * cosLat1;
+                var z1 = sinLat1;
+                var x2 = cosLong * cosLat2;
+                var y2 = sinLong * cosLat2;
+                var z2 = sinLat2;
+                glNormal3d(x2,y2,z2);
+                glVertex3d(radius*x2,radius*y2,radius*z2);
+                glNormal3d(x1,y1,z1);
+                glVertex3d(radius*x1,radius*y1,radius*z1);
+            }
+            glEnd();
+        }
+    }
+
+    function lights() {
+      var slices = 64;
+      var stacks = 32;
+
+      glColor3d(1, 1, 1);
+      var zero = [ 0, 0, 0, 1 ];
+
+      // viewpoint light
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, zero);
+      glEnable(GL_LIGHT0);
+
+      // sun light
+      glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [1, 1, 0, 0]);  
+      glEnable(GL_LIGHT2);
+      
+
+      // draw sun
+      glPushMatrix();
+      glTranslatef(0.65, 0.6, 0.3);
+      glLightfv(GL_LIGHT2, GL_POSITION, zero);
+      glColor3d(1, 1, 0);
+      smoothShpere(0.05,slices,stacks);
+      glPopMatrix();
+      
+      glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, zero);
+    }
+
+    function display() {
+      var slices = 64;
+      var stacks = 32;
+
+      glClearColor(0, 0, 0, 1);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+
+      // draw sun
+      lights();
+ 
+      glLoadIdentity();
+      glRotatef(rotateZ,0,0,1);
+      glRotatef(rotateY,0,1,0);
+      glRotatef(rotateX,1,0,0);
+      
+      // create base
+      glColor3d(0.7, 0.7, 0.7);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.2, 0.2, 0.2, 1]);
+      glPushMatrix();
+      glRotatef(90, 1, 0, 0);
+      square(1, 1, 1);
+      glPopMatrix();
+
+      // draw bottom sphere
+      glColor3d(0.7, 0.7, 0.7);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.2, 0.2, 0.2, 1]);
+      glPushMatrix();
+      glTranslatef(0, -0.30, 0);
+      smoothShpere(0.20,slices,stacks);
+      glPopMatrix()
+
+      // draw middle sphere
+      glColor3d(0.7, 0.7, 0.7);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.2, 0.2, 0.2, 1]);
+      glPushMatrix();
+      glTranslatef(0, 0, 0);
+      smoothShpere(0.15,slices,stacks);
+      glPopMatrix()
+
+      // draw top sphere
+      glColor3d(0.7, 0.7, 0.7);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.2, 0.2, 0.2, 1]);
+      glPushMatrix();
+      glTranslatef(0, 0.22, 0);
+      smoothShpere(0.10,slices,stacks);
+      glPopMatrix()
+
+    }
+
+    function doKeyDown(evt) {
+      var key = evt.keyCode;
+      if ( key == 37 ) // left
+          rotateY -= 15;
+      else if ( key == 39 ) // right
+          rotateY += 15;
+      else if ( key == 40) // down
+          rotateX += 15;
+      else if ( key == 38 ) // up
+          rotateX -= 15;
+      else if ( key == 33 ) // page up
+          rotateZ += 15;
+      else if ( key == 34 ) // page down
+          rotateZ -= 15;
+      else if ( key == 36 )  // home
+          rotateX = rotateY = rotateZ = 0;
+
+      display();
+    }
+
+    function initGL() {
+      glClearColor(0, 0, 0, 1);
+      glEnable(GL_DEPTH_TEST);
+      glEnable(GL_LIGHTING);
+      glEnable(GL_LIGHT0);
+      glEnable(GL_NORMALIZE);
+      glEnable(GL_COLOR_MATERIAL);
+      glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
+      glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, 32);
+      var dim = [0.5, 0.5, 0.5, 1];
+      glLightfv(GL_LIGHT0, GL_DIFFUSE, dim);
+      glLightfv(GL_LIGHT0, GL_SPECULAR, dim);
+      var gr = [1, 1, 1, 1];
+      var gra = [0.2, 0.2, 0.2, 1];
+      glLightfv(GL_LIGHT2, GL_AMBIENT, gra);
+      glLightfv(GL_LIGHT2, GL_DIFFUSE, gr);
+      glLightfv(GL_LIGHT2, GL_SPECULAR, gr);
+      glPolygonOffset(1,1);
+      // glLineWidth(2);    
+    }
+
+    function init() {
+        try {
+            glsimUse("maincanvas");
+        }
+        catch (e) {
+            document.getElementById("canvas-holder").innerHTML="<p><b>Sorry, an error occurred:<br>" +
+                    e + "</b></p>";
+            return;
+        }
+        document.onkeydown = doKeyDown;
+        initGL();
+        display();
+    }
+
+  </script>
+</head>
+<body onload="init()" style="text-align: center;">
+  <h1 id="headline">Nick Morin - HW4</h1>
+  <div id="canvas-holder">
+    <canvas id="maincanvas" width="600" height="600"></canvas>
+  </div>
+</body>
+</html>
