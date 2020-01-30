@@ -1,0 +1,128 @@
+<!-- 
+    circle function found here -> https://steemit.com/programming/@rxhector/it-only-took-3-days-to-draw-a-friggin-circle
+ -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>Babylon Template</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+        <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+    </head>
+
+   <body>
+
+    <canvas id="renderCanvas" touch-action="none"></canvas> //touch-action="none" for best results from PEP
+
+    <script>
+        var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
+        var engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+
+        function create2Dpoly(options, scene) {
+            var pos , points = [];
+            var disc = BABYLON.VertexData.CreateDisc(options);
+            pos = disc.positions;
+            //skip the center point
+            for (var i = 1; i < disc.positions.length/3; i++){
+                points.push(new BABYLON.Vector3(pos[i*3] , pos[i*3+1] , pos[i*3+2]));
+            }
+            var poly = BABYLON.MeshBuilder.CreateLines("circle", {points:points}, scene);
+            return poly;	
+        }
+
+        /******* Add the create scene function ******/
+        var createScene = function () {
+
+            // Create the scene space
+            var scene = new BABYLON.Scene(engine);
+
+            // Add a camera to the scene and attach it to the canvas
+            var camera = new BABYLON.ArcRotateCamera("Camera", 0, Math.PI / 2, 12, BABYLON.Vector3.Zero(), scene);
+	        camera.attachControl(canvas, false);
+            camera.setPosition(new BABYLON.Vector3(0,0,10));
+
+            // add light to scene
+            var light = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Add and manipulate meshes in the scene
+            var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {}, scene);
+            var sr_area = Math.pow(.5 , 2);
+            var sr_radius = Math.sqrt(sr_area/Math.PI);
+
+            // create head
+            var circle = create2Dpoly({radius:sr_radius}, scene);
+
+            // create body
+            var bodyPoints = [
+                new BABYLON.Vector3(0,0,0),
+                new BABYLON.Vector3(0,-1.8,0)
+            ];
+
+            // create arms
+            var leftArm = [
+                new BABYLON.Vector3(0,-1.2,0),
+                new BABYLON.Vector3(-0.7,-0.5,0),
+            ]
+
+            var rightArm = [
+                new BABYLON.Vector3(0,-1.2,0),
+                new BABYLON.Vector3(0.7,-0.5,0)
+            ]
+
+            // create legs
+            var leftLeg = [
+                new BABYLON.Vector3(0,-1.8,0),
+                new BABYLON.Vector3(-0.5,-2.5,0)
+            ]
+
+            var rightLeg = [
+                new BABYLON.Vector3(0,-1.8,0),
+                new BABYLON.Vector3(0.5,-2.5,0)
+            ]
+
+            // put rest of body
+            var body = BABYLON.MeshBuilder.CreateLines("lines", {points: bodyPoints}, scene);
+            var arm1 = BABYLON.MeshBuilder.CreateLines("lines", {points: leftArm}, scene);
+            var arm2 = BABYLON.MeshBuilder.CreateLines("lines", {points: rightArm}, scene);
+            var leg1 = BABYLON.MeshBuilder.CreateLines("lines", {points: leftLeg}, scene);
+            var leg2 = BABYLON.MeshBuilder.CreateLines("lines", {points: rightLeg}, scene);
+
+            return scene;
+        };
+        /******* End of the create scene function ******/    
+
+        var scene = createScene(); //Call the createScene function
+
+        // Register a render loop to repeatedly render the scene
+        engine.runRenderLoop(function () { 
+                scene.render();
+        });
+
+        // Watch for browser/canvas resize events
+        window.addEventListener("resize", function () { 
+                engine.resize();
+        });
+    </script>
+
+   </body>
+
+</html>
