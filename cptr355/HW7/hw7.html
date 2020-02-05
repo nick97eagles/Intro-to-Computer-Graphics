@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>Fun with Cameras</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+        <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+    </head>
+
+   <body>
+
+    <canvas id="renderCanvas" touch-action="none"></canvas>
+
+    <script>
+        var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
+        var engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+        var camera1;
+        var camera2;
+        var scene;
+        var cameraFlag = 1;
+
+        var initCamera  = function () {
+          // set up both cameras but only attach one
+          camera1 = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, new BABYLON.Vector3(0, 0, 0), scene);
+          camera2 = new BABYLON.UniversalCamera("UniversalCamera", new BABYLON.Vector3(0, 0, -10), scene);
+          scene.activeCamera = camera1;
+          camera1.attachControl(canvas, true);
+        }
+
+        var createScene = function () {
+          // Create the scene space
+          scene = new BABYLON.Scene(engine);
+
+          // Add a camera to the scene and attach it to the canvas
+          initCamera();
+
+          // Add lights to the scene
+          var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
+          var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
+
+          // create objects
+          createBox();
+          createSphere();
+
+          return scene;
+        };
+
+        function createBox() {
+          var box = BABYLON.MeshBuilder.CreateBox("box", {height: 1, width: 1}, scene);
+
+          var bloc = new BABYLON.StandardMaterial("bloc", scene);
+          bloc.diffuseTexture = new BABYLON.Texture("bloc.jpg", scene);
+          bloc.specularTexture = new BABYLON.Texture("bloc.jpg", scene);
+          bloc.ambientTexture = new BABYLON.Texture("bloc.jpg", scene);
+          bloc.emissiveTexture = new BABYLON.Texture("bloc.jpg", scene);
+          box.material = bloc;
+
+          // rotate box
+          box.rotation.x = 0.5;
+          box.rotation.y = 2;
+          box.rotation.z = 1.5;
+
+        }
+
+        function createSphere() {
+          var mySphere = BABYLON.MeshBuilder.CreateSphere("mySphere", {}, scene);
+
+          var grass1 = new BABYLON.StandardMaterial("grass1", scene);
+	        grass1.ambientTexture = new BABYLON.Texture("ice-texture5.png", scene);
+
+          var redMat = new BABYLON.StandardMaterial("redMat", scene);
+	        redMat.emissiveColor = new BABYLON.Color3(0, 1, 0);
+
+          // mySphere.material = grass1;
+
+          // translate sphere
+          mySphere.position.x = 2;
+          mySphere.position.y = 2;
+          mySphere.position.z = 1;
+          // add color material to sphere
+          mySphere.material = redMat;
+
+          return mySphere;
+        }
+
+        // button code came from https://playground.babylonjs.com/#743FF8#1
+        var buttonbox = document.createElement('div');
+        buttonbox.id = "buttonbox";
+        buttonbox.style.position = "absolute";
+        buttonbox.style.top = "60px";
+        buttonbox.style.left = "85%";
+        buttonbox.style.border = "5pt inset blue";
+        buttonbox.style.padding = "2pt";
+        buttonbox.style.paddingRight = "2pt";
+        buttonbox.style.width = "10em";
+        buttonbox.style.display = "block";
+        document.body.appendChild(buttonbox);
+
+        var tTag = document.createElement('div');
+        tTag.id = "choose";
+        tTag.textContent = "Options";
+        tTag.style.textAlign = "center";
+        tTag.style.border = "2pt solid gold";
+        tTag.style.marginLeft = "1.5pt";
+        tTag.style.marginTop = "3pt";
+        tTag.style.marginBottom = "2pt";
+        tTag.style.backgroundColor = "dodgerblue";
+        tTag.style.width = "96%";
+        tTag.style.fontSize = "1.0em";
+        tTag.style.color = "white";
+        buttonbox.appendChild(tTag);
+
+        var b14 = document.createElement('button');
+        b14.id = "ShowHidemyMeshOne";
+        b14.textContent = "Change to Universal";
+        b14.style.display = "block";
+        b14.style.width = "100%";
+        b14.style.fontSize = "1.1em";
+        buttonbox.appendChild(b14);
+        b14.onclick = function() {
+            if (cameraFlag === 1 ) {
+              cameraFlag = 0;
+              b14.textContent = "Change to Arc";
+              camera1.detachControl(canvas);
+              scene.activeCamera = camera2;
+              camera2.attachControl(canvas, true);
+              alert("click object to use arrow keys")
+            } 
+            else {
+              cameraFlag = 1;
+              b14.textContent = "Change to Universal";
+              camera2.detachControl(canvas);
+              scene.activeCamera = camera1;
+              camera1.attachControl(canvas, true);
+            }
+        }
+
+        var b15 = document.createElement('button');
+        b15.id = "ShowHidemyMeshOne";
+        b15.textContent = "Start Over";
+        b15.style.display = "block";
+        b15.style.width = "100%";
+        b15.style.fontSize = "1.1em";
+        buttonbox.appendChild(b15);
+        b15.onclick = function() {
+          location.reload();
+        }
+
+        var scene = createScene(); //Call the createScene function
+
+        // Register a render loop to repeatedly render the scene
+        engine.runRenderLoop(function () { 
+                scene.render();
+        });
+    </script>
+
+   </body>
+
+</html>
