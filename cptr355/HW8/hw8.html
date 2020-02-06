@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>Lights</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+        <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+    </head>
+
+   <body>
+
+    <canvas id="renderCanvas" touch-action="none"></canvas>
+
+    <script>
+      var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
+      var engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+      var pointLight, directionalLight, spotLight;
+      var pointSwitch, directionalSwitch, spotSwitch;
+
+      /******* Add the create scene function ******/
+      var createScene = function () {
+
+        // Create the scene space
+        var scene = new BABYLON.Scene(engine);
+
+        // Add a camera to the scene and attach it to the canvas
+        var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 2, new BABYLON.Vector3.Zero(), scene);
+        camera.setPosition(new BABYLON.Vector3(0,0,-20));
+        camera.attachControl(canvas, true);
+
+        // Add lights to the scene but have them turned off to start
+        pointLight = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
+        pointLight.setEnabled(false);
+        pointSwitch = false;
+
+        directionalLight = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(0, -1, 0), scene);
+        directionalLight.setEnabled(false);
+        directionalSwitch = false;
+
+        spotLight = new BABYLON.SpotLight("spotLight", new BABYLON.Vector3(0, 30, -10), new BABYLON.Vector3(0, -1, 1), Math.PI / 3, 2, scene);
+        spotLight.setEnabled(false);
+        spotSwitch = false;
+
+        // create objects
+        createBox();
+        createSphere();
+
+        return scene;
+      };
+
+      function createBox() {
+        var box = BABYLON.MeshBuilder.CreateBox("box", {height: 1, width: 1}, scene);
+
+        // rotate box
+        box.rotation.x = 0.5;
+        box.rotation.y = 2;
+        box.rotation.z = 1.5;
+
+
+      }
+
+      function createSphere() {
+        var mySphere = BABYLON.MeshBuilder.CreateSphere("mySphere", {}, scene);
+
+          // translate sphere
+          mySphere.position.x = 2;
+          mySphere.position.y = 2;
+          mySphere.position.z = 1;
+
+        return mySphere;
+      }
+
+      // button code came from https://playground.babylonjs.com/#743FF8#1
+      var buttonbox = document.createElement('div');
+      buttonbox.id = "buttonbox";
+      buttonbox.style.position = "absolute";
+      buttonbox.style.top = "60px";
+      buttonbox.style.left = "85%";
+      buttonbox.style.border = "5pt inset blue";
+      buttonbox.style.padding = "2pt";
+      buttonbox.style.paddingRight = "2pt";
+      buttonbox.style.width = "10em";
+      buttonbox.style.display = "block";
+      document.body.appendChild(buttonbox);
+
+      var tTag = document.createElement('div');
+      tTag.id = "choose";
+      tTag.textContent = "Options";
+      tTag.style.textAlign = "center";
+      tTag.style.border = "2pt solid gold";
+      tTag.style.marginLeft = "1.5pt";
+      tTag.style.marginTop = "3pt";
+      tTag.style.marginBottom = "2pt";
+      tTag.style.backgroundColor = "dodgerblue";
+      tTag.style.width = "96%";
+      tTag.style.fontSize = "1.0em";
+      tTag.style.color = "white";
+      buttonbox.appendChild(tTag);
+
+      // Point Light Button
+      var b14 = document.createElement('button');
+      b14.id = "ShowHidemyMeshOne";
+      b14.textContent = "Turn on Point Light";
+      b14.style.display = "block";
+      b14.style.width = "100%";
+      b14.style.fontSize = "1.1em";
+      buttonbox.appendChild(b14);
+      b14.onclick = function() {
+        if (!pointSwitch) {
+          // turn light on
+          pointLight.setEnabled(true);
+          pointSwitch = true;
+        }
+        else {
+          // turn light off
+          pointLight.setEnabled(false);
+          pointSwitch = false;
+        }
+        
+        // change text on button
+        if (pointSwitch) {
+          b14.textContent = "Turn off Point Light"
+        }
+        else {
+          b14.textContent = "Turn on Point Light";
+        }
+      }
+
+      // Directional Light button
+      var b15 = document.createElement('button');
+      b15.id = "ShowHidemyMeshOne";
+      b15.textContent = "Turn on Directional Light";
+      b15.style.display = "block";
+      b15.style.width = "100%";
+      b15.style.fontSize = "1.1em";
+      buttonbox.appendChild(b15);
+      b15.onclick = function() {
+        if (!directionalSwitch) {
+          directionalLight.setEnabled(true);
+          directionalLight.intensity = 0.5;
+          directionalSwitch = true;
+        }
+        else {
+          directionalLight.setEnabled(false);
+          directionalSwitch = false;
+        }
+
+        if (directionalSwitch) {
+          b15.textContent = "Turn off Directional Light";
+        }
+        else {
+          b15.textContent = "Turn on Directional Light";
+        }
+      }
+
+      // Spot Light button
+      var b16 = document.createElement('button');
+      b16.id = "ShowHidemyMeshOne";
+      b16.textContent = "Turn on Spot Light";
+      b16.style.display = "block";
+      b16.style.width = "100%";
+      b16.style.fontSize = "1.1em";
+      buttonbox.appendChild(b16);
+      b16.onclick = function() {
+        if (!spotSwitch) {
+          spotLight.setEnabled(true);
+          spotSwitch = true;
+        }
+        else {
+          spotLight.setEnabled(false);
+          spotSwitch = false;
+        }
+
+        if (spotSwitch) {
+          b16.textContent = "Turn off Spot Light";
+        }
+        else {
+          b16.textContent = "Turn on Spot Light";
+        }
+      }
+
+
+      /******* End of the create scene function ******/    
+
+      var scene = createScene(); //Call the createScene function
+
+      // Register a render loop to repeatedly render the scene
+      engine.runRenderLoop(function () { 
+              scene.render();
+      });
+    </script>
+
+   </body>
+
+</html>
