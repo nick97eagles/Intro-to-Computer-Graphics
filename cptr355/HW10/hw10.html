@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>Collisions</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+        <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+    </head>
+
+   <body>
+
+    <canvas id="renderCanvas" touch-action="none"></canvas>
+
+    <script>
+      var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
+      var engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+      var flag = false;
+
+      /******* Add the create scene function ******/
+      var createScene = function () {
+
+        // Create the scene space
+        scene = new BABYLON.Scene(engine);
+
+        // Add a camera to the scene and attach it to the canvas
+        var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3.Zero(), scene);
+        camera.setPosition(new BABYLON.Vector3(10,10,-10));
+        camera.attachControl(canvas, true);
+
+        // Add lights to the scene but have them turned off to start
+        var light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+
+        // create object
+        var box = createBox();
+
+        // create ground
+        var ground = BABYLON.Mesh.CreatePlane("ground", 20.0, scene);
+        ground.material = new BABYLON.StandardMaterial("groundMat", scene);
+        ground.material.diffuseColor = new BABYLON.Color3(0, 0.5, 0);
+        ground.material.backFaceCulling = false;
+        ground.position = new BABYLON.Vector3(0, 0, 0);
+        ground.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0);
+
+
+        // add some animation
+        scene.registerBeforeRender(function () {
+        let time = new Date().getTime();
+        box.position.y = time / 500 % 8;
+
+        // when box goes through scene it log to the console and changes colors
+        if(box.intersectsMesh(ground)) {
+          var redMat = new BABYLON.StandardMaterial("redMat", scene);
+	        redMat.emissiveColor = new BABYLON.Color3(1, 0, 0);
+          box.material = redMat;
+          // console.log("box collided with ground");
+        }
+        else {
+          var blueMat = new BABYLON.StandardMaterial("blueMat", scene);
+	        blueMat.emissiveColor = new BABYLON.Color3(0, 0, 1);
+          box.material = blueMat;
+        }
+        });
+      
+        return scene;
+      };
+
+      function createBox() {
+        var box = BABYLON.MeshBuilder.CreateBox("box", {height: 1, width: 1}, scene);
+        box.position.y = 8;
+        return box;
+      }
+
+      // create scene
+      var scene = createScene();
+
+      // Register a render loop to repeatedly render the scene
+      engine.runRenderLoop(function () { 
+              scene.render();
+      });
+
+      window.addEventListener("click", function() {
+        var pickResult = scene.pick(scene.pointerX, scene.pointerY);
+        // determine if user clicked on an object
+        if(pickResult.hit) {
+          console.log("You clicked on an Object");
+        }
+        else {
+          console.log("You did not click on an Object");
+        }
+      });
+    </script>
+
+   </body>
+
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>Nick Morin</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+        <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+    </head>
+
+   <body>
+
+    <canvas id="renderCanvas" touch-action="none"></canvas>
+
+    <script>
+      var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
+      var engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+      var flag = false;
+
+      /******* Add the create scene function ******/
+      var createScene = function () {
+
+        // Create the scene space
+        scene = new BABYLON.Scene(engine);
+
+        // Add a camera to the scene and attach it to the canvas
+        var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3.Zero(), scene);
+        camera.setPosition(new BABYLON.Vector3(0,5,-7));
+        camera.attachControl(canvas, true);
+
+        // Add lights to the scene but have them turned off to start
+        var light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+
+        // create ground
+        var ground = BABYLON.Mesh.CreatePlane("ground", 20.0, scene);
+        ground.material = new BABYLON.StandardMaterial("groundMat", scene);
+        ground.material.diffuseTexture = new BABYLON.Texture("https://images.pexels.com/photos/129731/pexels-photo-129731.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260", scene);
+        ground.material.backFaceCulling = false;
+        ground.position = new BABYLON.Vector3(0, 0, 0);
+        ground.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0);
+
+        var spriteManagerCharacter = new BABYLON.SpriteManager("characterManager", "https://blaiprat.github.io/jquery.animateSprite/img/scottpilgrim_multiple.png", 7, {width: 108, height: 140}, scene);
+        var character = new BABYLON.Sprite("character", spriteManagerCharacter);
+       
+        // character.playAnimation(0, 7, true, 100);
+
+        character.cellIndex = 0;
+        character.position.y = 0.5;
+        character.x = -8;
+        var intervalID = window.setInterval(moveCharacter, 100, character);
+        function moveCharacter() {
+          character.cellIndex = (character.cellIndex + 1) % 8;
+          character.position.x += 0.3;      // makes sprite move slower across screen
+          if (character.position.x > 8) {
+            character.position.x = -8;
+          }
+        }
+      
+        return scene;
+      };
+
+      // create scene
+      var scene = createScene();
+
+      // Register a render loop to repeatedly render the scene
+      engine.runRenderLoop(function () { 
+              scene.render();
+      });
+
+    </script>
+
+   </body>
+
+</html>
