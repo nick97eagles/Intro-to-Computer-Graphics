@@ -1,0 +1,141 @@
+<!Doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Peg Game</title>
+
+    <style>
+      html, body {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #renderCanvas {
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+    </style>
+
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+    <script src="https://cdn.babylonjs.com/cannon.js"></script>
+  </head>
+
+  <body>
+    <canvas id="renderCanvas" touch-action="none"></canvas>
+
+    <script>
+      var canvas = document.getElementById("renderCanvas");
+      var engine = new BABYLON.Engine(canvas, true);
+
+      var createScene = function () {
+        scene = new BABYLON.Scene(engine);
+        var gravityVector = new BABYLON.Vector3(0, -9.81, 0);
+        var physicsPlugin = new BABYLON.CannonJSPlugin();
+        scene.enablePhysics(gravityVector, physicsPlugin);
+        scene.collisionsEnabled = true;
+
+  
+        // create camera
+        var camera = new BABYLON.ArcRotateCamera("Camera", 0,0,0, new BABYLON.Vector3.Zero(), scene);
+        camera.setPosition(new BABYLON.Vector3(0, 3, -2));
+        camera.attachControl(canvas, true);
+        camera.checkCollisions = true;
+        // camera.applyGravity = true;
+
+        // add a light source
+        var light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0,2,0), scene);
+
+        // create sourcePlane
+        var sourcePlane = new BABYLON.Plane(0, -1, 1, 0);
+        sourcePlane.normalize();
+    
+        // Add and manipulate meshes in the scene
+        var plane = BABYLON.MeshBuilder.CreatePlane("plane", {height:2.5, width: 1, sourcePlane: sourcePlane, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, scene);
+        var planeMaterial = new BABYLON.StandardMaterial("plane_material", scene);
+        planeMaterial.ambientTexture = new BABYLON.Texture("https://img.poliigon.com/assets/WoodFlooring044/assets/large/flat.jpg", scene);
+        plane.material = planeMaterial;
+        plane.physicsImpostor = new BABYLON.PhysicsImpostor(plane, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        plane.checkCollisions = true;
+
+        // create pegs for gameboard
+        createPegs();
+
+        var ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter: 0.1}, scene);
+        ball.position = new BABYLON.Vector3(0, 0.9, 0.75);
+        ball.checkCollisions = true;
+        ball.physicsImpostor = new BABYLON.PhysicsImpostor(ball, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9 }, scene);
+
+        // create pointer drag behavior
+        var dragBehavior = new BABYLON.PointerDragBehavior({dragAxis: new BABYLON.Vector3(1,0,0)});
+        dragBehavior.useObjectOrienationForDragging = false;
+
+        ball.addBehavior(dragBehavior);
+
+        return scene;
+      }
+
+      function createPegs() {
+        // first row
+        for(let i=0; i<4; i++) {
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
+          cone.position = new BABYLON.Vector3(-0.37 + (i/4), 0.7, 0.55);
+          cone.rotation.x = -10.2;
+          cone.checkCollisions = true;
+          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+        }
+        // second row
+        for(let i=0; i<3; i++) {
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
+          cone.position = new BABYLON.Vector3(-0.25 + (i/4), 0.5, 0.35);
+          cone.rotation.x = -10.2;
+          cone.checkCollisions = true;
+          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+        }
+        // third row
+        for(let i=0; i<4; i++) {
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
+          cone.position = new BABYLON.Vector3(-0.37 + (i/4), 0.3, 0.15);
+          cone.rotation.x = -10.2;
+          cone.checkCollisions = true;
+          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+        }
+        // fourth row
+        for(let i=0; i<3; i++) {
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
+          cone.position = new BABYLON.Vector3(-0.25 + (i/4), 0.1, -0.05);
+          cone.rotation.x = -10.2;
+          cone.checkCollisions = true;
+          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+        }
+        // fifth row
+        for(let i=0; i<4; i++) {
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
+          cone.position = new BABYLON.Vector3(-0.37 + (i/4), -0.1, -0.25);
+          cone.rotation.x = -10.2;
+          cone.checkCollisions = true;
+          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+        }
+        // sixth row
+        for(let i=0; i<3; i++) {
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
+          cone.position = new BABYLON.Vector3(-0.25 + (i/4), -0.3, -0.45);
+          cone.rotation.x = -10.2;
+          cone.checkCollisions = true;
+          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+        }
+      }
+
+      var scene = createScene();
+
+      engine.runRenderLoop(function () {
+        scene.render();
+      });
+    </script>
+  </body>
+</html>
