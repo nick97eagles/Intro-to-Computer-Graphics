@@ -1,3 +1,10 @@
+<!-- 
+  This peg game was created by Nick Morin with 
+  some physics help from user @Wingnut from the
+  babylon.js help forum. This game created as a
+  final project for an intro to graphics class.
+-->
+
 <!Doctype html>
 <html>
   <head>
@@ -30,106 +37,476 @@
     <canvas id="renderCanvas" touch-action="none"></canvas>
 
     <script>
+      // global variables
       var canvas = document.getElementById("renderCanvas");
       var engine = new BABYLON.Engine(canvas, true);
+      var ball;
+      var score = 0;
+      var hs = 0;
+      // flags that prevent score from increasing if ball bounces on same peg more than once
+      var row1 = true; var row2 = true;
+      var row3 = true; var row4 = true;
+      var row5 = true; var row6 = true;
+      var f1 = true;   var f2 = true;
+      var f3 = true;   var f4 = true;
 
       var createScene = function () {
         scene = new BABYLON.Scene(engine);
-        var gravityVector = new BABYLON.Vector3(0, -9.81, 0);
+        var gravityVector = new BABYLON.Vector3(0, -9.8, 0);
         var physicsPlugin = new BABYLON.CannonJSPlugin();
         scene.enablePhysics(gravityVector, physicsPlugin);
-        scene.collisionsEnabled = true;
 
-  
         // create camera
         var camera = new BABYLON.ArcRotateCamera("Camera", 0,0,0, new BABYLON.Vector3.Zero(), scene);
-        camera.setPosition(new BABYLON.Vector3(0, 3, -2));
-        camera.attachControl(canvas, true);
-        camera.checkCollisions = true;
-        // camera.applyGravity = true;
+        camera.setPosition(new BABYLON.Vector3(0, 12, -30));
+        // camera.attachControl(canvas, true);
 
         // add a light source
         var light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0,2,0), scene);
+        light.specular = BABYLON.Color3.Black();
+        light.groundColor = BABYLON.Color3.Gray();
 
-        // create sourcePlane
-        var sourcePlane = new BABYLON.Plane(0, -1, 1, 0);
-        sourcePlane.normalize();
-    
-        // Add and manipulate meshes in the scene
-        var plane = BABYLON.MeshBuilder.CreatePlane("plane", {height:2.5, width: 1, sourcePlane: sourcePlane, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, scene);
-        var planeMaterial = new BABYLON.StandardMaterial("plane_material", scene);
-        planeMaterial.ambientTexture = new BABYLON.Texture("https://img.poliigon.com/assets/WoodFlooring044/assets/large/flat.jpg", scene);
-        plane.material = planeMaterial;
-        plane.physicsImpostor = new BABYLON.PhysicsImpostor(plane, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
-        plane.checkCollisions = true;
+        // add background music
+        var backgroundMusic = new BABYLON.Sound("Music", "backgroundMusic.mp3", scene, null, {
+          loop: true,
+          autoplay: true
+        });
 
-        // create pegs for gameboard
-        createPegs();
+        createBoard()  // create 'gameboard'
+        createPegs();  // create pegs for gameboard
+        ball = createBall();  // add ball to scene
+        setParentsAndPhysics(); // sets parents and physics
 
-        var ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter: 0.1}, scene);
-        ball.position = new BABYLON.Vector3(0, 0.9, 0.75);
-        ball.checkCollisions = true;
-        ball.physicsImpostor = new BABYLON.PhysicsImpostor(ball, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9 }, scene);
+        
+        scene.registerBeforeRender(function () {
+          // get meshes
+          var floor1 = scene.getMeshByName("floor1");
+          var floor2 = scene.getMeshByName("floor2");
+          var floor3 = scene.getMeshByName("floor3");
+          var floor4 = scene.getMeshByName("floor4");
 
-        // create pointer drag behavior
-        var dragBehavior = new BABYLON.PointerDragBehavior({dragAxis: new BABYLON.Vector3(1,0,0)});
-        dragBehavior.useObjectOrienationForDragging = false;
-
-        ball.addBehavior(dragBehavior);
-
+          for(let i = 0; i<pegs.length; i++) {
+            // first row of pegs
+            if((ball.intersectsMesh(pegs[0]) || ball.intersectsMesh(pegs[1]) || ball.intersectsMesh(pegs[2]) || ball.intersectsMesh(pegs[3])) && row1 == true) {
+              score += 1;
+              b14.textContent = score;
+              row1 = false;
+            }
+            // second row of pegs
+            if((ball.intersectsMesh(pegs[4]) || ball.intersectsMesh(pegs[5]) || ball.intersectsMesh(pegs[6])) && row2 == true) {
+              score += 2;
+              b14.textContent = score;
+              row2 = false;
+            }
+            // third row of pegs
+            if((ball.intersectsMesh(pegs[7]) || ball.intersectsMesh(pegs[8]) || ball.intersectsMesh(pegs[9]) || ball.intersectsMesh(pegs[10])) && row3 == true) {
+              score += 3;
+              b14.textContent = score;
+              row3 = false;
+            }
+            // fourth row of pegs
+            if((ball.intersectsMesh(pegs[11]) || ball.intersectsMesh(pegs[12]) || ball.intersectsMesh(pegs[13])) && row4 == true) {
+              score += 4;
+              b14.textContent = score;
+              row4 = false;
+            }
+            // fifth row of pegs
+            if((ball.intersectsMesh(pegs[14]) || ball.intersectsMesh(pegs[15]) || ball.intersectsMesh(pegs[16]) || ball.intersectsMesh(pegs[17])) && row5 == true) {
+              score += 5;
+              b14.textContent = score;
+              row5 = false;
+            }
+            // sixth row of pegs
+            if((ball.intersectsMesh(pegs[18]) || ball.intersectsMesh(pegs[19]) || ball.intersectsMesh(pegs[20])) && row6 == true) {
+              score += 6;
+              b14.textContent = score;
+              row6 = false;
+            }
+            // first floor
+            if(ball.intersectsMesh(floor1) && f1 == true) {
+              score += 10;
+              b14.textContent = score;
+              f1 = false;
+            }
+            // second floor
+            if(ball.intersectsMesh(floor2) && f2 == true) {
+              score += 20;
+              b14.textContent = score;
+              f2 = false;
+            }
+            // third floor
+            if(ball.intersectsMesh(floor3) && f3 == true) {
+              score += 30;
+              b14.textContent = score;
+              f3 = false;
+            }
+            // fourth floor
+            if(ball.intersectsMesh(floor4) && f4 == true) {
+              score += 40;
+              b14.textContent = score;
+              f4 = false;
+            }
+          }
+        });
         return scene;
       }
 
+      /*
+      * Creates plane that is used
+      * as the 'board' for the game
+      */
+      function createBoard() {
+        var tilt = BABYLON.Tools.ToRadians(-250);
+
+        // Add and manipulate meshes in the scene
+        var plane = BABYLON.MeshBuilder.CreateBox("plane", {height:20, width:10, depth:.1, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, scene);
+        plane.rotation.x = tilt;
+        var planeMaterial = new BABYLON.StandardMaterial("plane_material", scene);
+        planeMaterial.ambientTexture = new BABYLON.Texture("https://upload.wikimedia.org/wikipedia/commons/c/cb/Balsa_Wood_Texture.jpg", scene);
+        plane.material = planeMaterial;
+
+        // create "glass" to go over front of board so ball doesn't bounce out of play
+        var glass = BABYLON.MeshBuilder.CreateBox("glass", {height:19, width:10, depth:.1, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, scene);
+        glass.position = new BABYLON.Vector3(0, -1.5, -2);
+        glass.rotation.x = 9.77;
+        var glassMaterial = new BABYLON.StandardMaterial("glassMaterial", scene);
+        glassMaterial.diffuseColor = new BABYLON.Color3(1,1,1);
+        glassMaterial.alpha = 0.1; // hide glass
+        glass.material = glassMaterial;
+
+        // add sides to board to keep ball from falling off
+        var leftSide = BABYLON.MeshBuilder.CreateBox("leftside", {height: 20, width: 1, depth: 3}, scene);
+        leftSide.position = new BABYLON.Vector3(-5.5, 0, 0);
+        leftSide.material = planeMaterial;
+
+        var rightSide = BABYLON.MeshBuilder.CreateBox("rightside", {height: 20, width: 1, depth: 3}, scene);
+        rightSide.position = new BABYLON.Vector3(5.5, 0, 0);
+        rightSide.material = planeMaterial;
+
+        // add boxes to bottom of plane
+        var box1 = BABYLON.MeshBuilder.CreateBox("box1", {height:1.5, width:1, depth:3}, scene);
+        box1.position = new BABYLON.Vector3(-5.5, -10.7, 0);
+        box1.material = planeMaterial;
+
+        var floor1 = BABYLON.MeshBuilder.CreateBox("floor1", {height:3, width:0.1, depth:3.5}, scene);
+        floor1.rotation.z = BABYLON.Tools.ToRadians(90);
+        floor1.rotation.y = BABYLON.Tools.ToRadians(90);
+        floor1.position = new BABYLON.Vector3(-4.25, -11.5, 0);
+        floor1.material = planeMaterial;
+
+        var box2 = BABYLON.MeshBuilder.CreateBox("box2", {height:1.5, width:0.5, depth:3}, scene);
+        box2.position = new BABYLON.Vector3(-2.5, -10.7, 0);
+        box2.material = planeMaterial;
+
+        var floor2 = BABYLON.MeshBuilder.CreateBox("floor2", {height:3, width:0.1, depth:2.5}, scene);
+        floor2.rotation.z = BABYLON.Tools.ToRadians(90);
+        floor2.rotation.y = BABYLON.Tools.ToRadians(90);
+        floor2.position = new BABYLON.Vector3(-1.25, -11.5, 0);
+        floor2.material = planeMaterial;
+
+        var box3 = BABYLON.MeshBuilder.CreateBox("box3", {height:1.5, width:0.5, depth:3}, scene);
+        box3.position = new BABYLON.Vector3(0, -10.7, 0);
+        box3.material = planeMaterial;
+
+        var floor3 = BABYLON.MeshBuilder.CreateBox("floor3", {height:3, width:0.1, depth:2.5}, scene);
+        floor3.rotation.z = BABYLON.Tools.ToRadians(90);
+        floor3.rotation.y = BABYLON.Tools.ToRadians(90);
+        floor3.position = new BABYLON.Vector3(1.25, -11.5, 0);
+        floor3.material = planeMaterial;
+
+        var box4 = BABYLON.MeshBuilder.CreateBox("box4", {height:1.5, width:0.5, depth:3}, scene);
+        box4.position = new BABYLON.Vector3(2.5, -10.7, 0);
+        box4.material = planeMaterial;
+
+        var floor4 = BABYLON.MeshBuilder.CreateBox("floor4", {height:3, width:0.1, depth:3.5}, scene);
+        floor4.rotation.z = BABYLON.Tools.ToRadians(90);
+        floor4.rotation.y = BABYLON.Tools.ToRadians(90);
+        floor4.position = new BABYLON.Vector3(4.25, -11.5, 0);
+        floor4.material = planeMaterial;
+
+        var box5 = BABYLON.MeshBuilder.CreateBox("box5", {height:1.5, width:1, depth:3}, scene);
+        box5.position = new BABYLON.Vector3(5.5, -10.7, 0);
+        box5.material = planeMaterial;
+
+        var backStop = BABYLON.MeshBuilder.CreateBox("backStop", {height:2, width:12, depth:.1}, scene);
+        backStop.position = new BABYLON.Vector3(0, -10.5, 1);
+        backStop.material = planeMaterial;
+      }
+
+      /*
+      * Creates sphere mesh that
+      * be used as the ball for the
+      * game
+      */
+      function createBall() {
+        var ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter: 1}, scene);
+        ball.position = new BABYLON.Vector3(0, 8, 2.3);
+
+        // create pointer drag behavior.
+        // Should we do this BEFORE or AFTER impostor adding?
+        var dragBehavior = new BABYLON.PointerDragBehavior({dragAxis: new BABYLON.Vector3(1,0,0)});
+        dragBehavior.useObjectOrienationForDragging = false;
+        ball.addBehavior(dragBehavior);
+
+        dragBehavior.onDragEndObservable.add(function(){
+            ball.physicsImpostor = new BABYLON.PhysicsImpostor(ball, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9 }, scene);
+        })
+
+        return ball;
+      }
+
+      /*
+      * This function creates pegs and
+      * associates all functionality like
+      * physics and points.
+      */
+      var pegs = []; // global var.
       function createPegs() {
         // first row
         for(let i=0; i<4; i++) {
-          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
-          cone.position = new BABYLON.Vector3(-0.37 + (i/4), 0.7, 0.55);
-          cone.rotation.x = -10.2;
-          cone.checkCollisions = true;
-          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.5, diameterBottom: 0.5, height: 1.5}, scene);
+          pegs.push(cone);
+          //   cone.parent = scene.getMeshByName('plane');
+          cone.position = new BABYLON.Vector3(-3.75 + i/.4, 6, -.95);
+          cone.rotation.x = -Math.PI/2;
         }
         // second row
         for(let i=0; i<3; i++) {
-          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
-          cone.position = new BABYLON.Vector3(-0.25 + (i/4), 0.5, 0.35);
-          cone.rotation.x = -10.2;
-          cone.checkCollisions = true;
-          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.5, diameterBottom: 0.5, height: 1.5}, scene);
+          pegs.push(cone);
+          //   cone.parent = scene.getMeshByName('plane');
+          cone.position = new BABYLON.Vector3(-2.5 + i/.4, 3, -.95);
+          cone.rotation.x = -Math.PI/2;
         }
         // third row
         for(let i=0; i<4; i++) {
-          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
-          cone.position = new BABYLON.Vector3(-0.37 + (i/4), 0.3, 0.15);
-          cone.rotation.x = -10.2;
-          cone.checkCollisions = true;
-          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.5, diameterBottom: 0.5, height: 1.5}, scene);
+          pegs.push(cone);
+          //   cone.parent = scene.getMeshByName('plane');
+          cone.position = new BABYLON.Vector3(-3.75 + i/.4, 0, -.95);
+          cone.rotation.x = -Math.PI/2;
         }
         // fourth row
         for(let i=0; i<3; i++) {
-          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
-          cone.position = new BABYLON.Vector3(-0.25 + (i/4), 0.1, -0.05);
-          cone.rotation.x = -10.2;
-          cone.checkCollisions = true;
-          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.5, diameterBottom: 0.5, height: 1.5}, scene);
+          pegs.push(cone);
+          //   cone.parent = scene.getMeshByName('plane');
+          cone.position = new BABYLON.Vector3(-2.5 + i/.4, -3, -.95);
+          cone.rotation.x = -Math.PI/2;
         }
         // fifth row
         for(let i=0; i<4; i++) {
-          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
-          cone.position = new BABYLON.Vector3(-0.37 + (i/4), -0.1, -0.25);
-          cone.rotation.x = -10.2;
-          cone.checkCollisions = true;
-          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.5, diameterBottom: 0.5, height: 1.5}, scene);
+          pegs.push(cone);
+          //   cone.parent = scene.getMeshByName('plane');
+          cone.position = new BABYLON.Vector3(-3.75 + i/.4, -6, -.95);
+          cone.rotation.x = -Math.PI/2;
         }
         // sixth row
         for(let i=0; i<3; i++) {
-          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.05, diameterBottom: 0.05, height: 0.2}, scene);
-          cone.position = new BABYLON.Vector3(-0.25 + (i/4), -0.3, -0.45);
-          cone.rotation.x = -10.2;
-          cone.checkCollisions = true;
-          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+          var cone = BABYLON.MeshBuilder.CreateCylinder("cone", {diameterTop: 0.5, diameterBottom: 0.5, height: 1.5}, scene);
+          pegs.push(cone);
+          //   cone.parent = scene.getMeshByName('plane');
+          cone.position = new BABYLON.Vector3(-2.5 + i/.4, -9, -.95);
+          cone.rotation.x = -Math.PI/2;
         }
       }
+
+      /*
+       * sets the physics imposters
+       * for all the necessary meshes
+       */
+      function setParentsAndPhysics() {
+        // install impostors and set parents
+        // First the pegs.  Set impostors BEFORE setting parent.
+        for (cone of pegs) {
+          cone.physicsImpostor = new BABYLON.PhysicsImpostor(cone, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.9 }, scene);
+          cone.parent = scene.getMeshByName('plane');
+        }
+
+        // Get some scope-lost references
+        var plane = scene.getMeshByName('plane');
+        var glass = scene.getMeshByName('glass');
+        var leftSide = scene.getMeshByName('leftside');
+        var rightSide = scene.getMeshByName('rightside');
+        var box1 = scene.getMeshByName("box1");
+        var box2 = scene.getMeshByName("box2");
+        var box3 = scene.getMeshByName("box3");
+        var box4 = scene.getMeshByName("box4");
+        var box5 = scene.getMeshByName("box5");
+        var floor1 = scene.getMeshByName("floor1");
+        var floor2 = scene.getMeshByName("floor2");
+        var floor3 = scene.getMeshByName("floor3");
+        var floor4 = scene.getMeshByName("floor4");
+        var backStop = scene.getMeshByName("backStop");
+
+
+        // main board physics impostor
+        plane.physicsImpostor = new BABYLON.PhysicsImpostor(plane, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        glass.physicsImpostor = new BABYLON.PhysicsImpostor(glass, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+
+        // side boards physics impostors... and then parenting.
+        leftSide.physicsImpostor = new BABYLON.PhysicsImpostor(leftSide, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        leftSide.parent = plane;
+
+        rightSide.physicsImpostor = new BABYLON.PhysicsImpostor(rightSide, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        rightSide.parent = plane;
+
+        box1.physicsImpostor = new BABYLON.PhysicsImpostor(box1, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        box1.parent = plane;
+
+        floor1.physicsImpostor = new BABYLON.PhysicsImpostor(floor1, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        floor1.parent = plane;
+
+        box2.physicsImpostor = new BABYLON.PhysicsImpostor(box2, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        box2.parent = plane;
+
+        floor2.physicsImpostor = new BABYLON.PhysicsImpostor(floor2, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        floor2.parent = plane;
+
+        box3.physicsImpostor = new BABYLON.PhysicsImpostor(box3, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        box3.parent = plane;
+
+        floor3.physicsImpostor = new BABYLON.PhysicsImpostor(floor3, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        floor3.parent = plane;
+
+        box4.physicsImpostor = new BABYLON.PhysicsImpostor(box4, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        box4.parent = plane;
+
+        floor4.physicsImpostor = new BABYLON.PhysicsImpostor(floor4, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        floor4.parent = plane;
+
+        box5.physicsImpostor = new BABYLON.PhysicsImpostor(box5, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        box5.parent = plane;
+
+        backStop.physicsImpostor = new BABYLON.PhysicsImpostor(backStop, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+        backStop.parent = plane;
+      }
+
+      // buttons for resetting the ball and score
+      // reset ball button
+      var buttonbox = document.createElement('div');
+      buttonbox.id = "buttonbox";
+      buttonbox.style.position = "absolute";
+      buttonbox.style.top = "60px";
+      buttonbox.style.left = "80%";
+      buttonbox.style.border = "5pt inset blue";
+      buttonbox.style.padding = "2pt";
+      buttonbox.style.paddingRight = "2pt";
+      buttonbox.style.width = "10em";
+      buttonbox.style.display = "block";
+      document.body.appendChild(buttonbox);
+
+      var tTag = document.createElement('div');
+      tTag.id = "choose";
+      tTag.textContent = "OPTIONS";
+      tTag.style.textAlign = "center";
+      tTag.style.border = "2pt solid gold";
+      tTag.style.marginLeft = "1.5pt";
+      tTag.style.marginTop = "3pt";
+      tTag.style.marginBottom = "2pt";
+      tTag.style.backgroundColor = "dodgerblue";
+      tTag.style.width = "96%";
+      tTag.style.fontSize = "1.0em";
+      tTag.style.color = "white";
+      buttonbox.appendChild(tTag);
+
+      var b14 = document.createElement('button');
+      b14.id = "ShowHidemyMeshOne";
+      b14.textContent = "New ball";
+      b14.style.display = "block";
+      b14.style.width = "100%";
+      b14.style.fontSize = "1.1em";
+      buttonbox.appendChild(b14);
+      b14.onclick = function() {
+        // dispose of old ball and init new one
+        var oldBall = scene.getMeshByName("ball");
+        oldBall.physicsImpostor.dispose();
+        oldBall.dispose();
+        ball = createBall();
+        // reset flags
+        row1 = true;
+        row2 = true;
+        row3 = true;
+        row4 = true;
+        row5 = true;
+        row6 = true;
+        f1 = true;
+        f2 = true;
+        f3 = true;
+        f4 = true;
+        // check high score
+        if (score > hs) {
+          hs = score;
+        }
+        score = 0;
+        b14.textContent = score;
+        b15.textContent = hs;
+      }
+
+      // create score box
+
+      var buttonbox = document.createElement('div');
+      buttonbox.id = "buttonbox";
+      buttonbox.style.position = "absolute";
+      buttonbox.style.top = "60px";
+      buttonbox.style.right = "80%";
+      buttonbox.style.border = "5pt inset blue";
+      buttonbox.style.padding = "2pt";
+      buttonbox.style.paddingRight = "2pt";
+      buttonbox.style.width = "10em";
+      buttonbox.style.display = "block";
+      document.body.appendChild(buttonbox);
+
+      var tTag = document.createElement('div');
+      tTag.id = "choose";
+      tTag.textContent = "SCORE";
+      tTag.style.textAlign = "center";
+      tTag.style.border = "2pt solid gold";
+      tTag.style.marginLeft = "1.5pt";
+      tTag.style.marginTop = "3pt";
+      tTag.style.marginBottom = "2pt";
+      tTag.style.backgroundColor = "dodgerblue";
+      tTag.style.width = "96%";
+      tTag.style.fontSize = "1.0em";
+      tTag.style.color = "white";
+      buttonbox.appendChild(tTag);
+
+      // score box
+      var b14 = document.createElement('div');
+      b14.id = "ShowHidemyMeshOne";
+      b14.textContent = score;
+      b14.style.display = "block";
+      b14.style.width = "100%";
+      b14.style.fontSize = "1.1em";
+      b14.style.textAlign = "center";
+      b14.style.backgroundColor = "white";
+      buttonbox.appendChild(b14);
+
+      var highScore = document.createElement('div');
+      highScore.id = "highScore";
+      highScore.textContent = "HIGHSCORE";
+      highScore.style.textAlign = "center";
+      highScore.style.border = "2pt solid gold";
+      highScore.style.marginLeft = "1.5pt";
+      highScore.style.marginTop = "3pt";
+      highScore.style.marginBottom = "2pt";
+      highScore.style.backgroundColor = "dodgerblue";
+      highScore.style.width = "96%";
+      highScore.style.fontSize = "1.0em";
+      highScore.style.color = "white";
+      buttonbox.appendChild(highScore);
+
+      // highscore box
+      var b15 = document.createElement('div');
+      b15.id = "ShowHidemyMeshOne";
+      b15.textContent = hs;
+      b15.style.display = "block";
+      b15.style.width = "100%";
+      b15.style.fontSize = "1.1em";
+      b15.style.textAlign = "center";
+      b15.style.backgroundColor = "white";
+      buttonbox.appendChild(b15);
 
       var scene = createScene();
 
